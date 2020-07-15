@@ -1,0 +1,13 @@
+#docker-compose -f docker-compose.yaml up -d
+
+kuna_trading_bot_mysql_db:
+  container_name: kuna_trading_bot_mysql_db
+  image: "mysql:5.7"
+  ports:
+    - 3333:3306
+  environment:
+    MYSQL_ROOT_PASSWORD:
+    MYSQL_DATABASE:
+    MYSQL_USER:
+    MYSQL_PASSWORD:
+    ssl-mode: DISABLED
