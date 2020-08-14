@@ -11,7 +11,7 @@
 	<groupId>com.trading-bot</groupId>
 	<artifactId>kuna</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>kuna</name>
+	<name>kuna-trading-bot</name>
 	<description>Trading bot for kuna.io</description>
 
 	<properties>
