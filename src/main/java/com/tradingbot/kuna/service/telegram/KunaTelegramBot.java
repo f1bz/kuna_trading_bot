@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 public class KunaTelegramBot extends TelegramBotCore {
 
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss dd.MM.yyyy");
     @Value("${time.zone.hours:3}")
     private Integer zonedOffset;
     private final UserService userService;
@@ -45,15 +47,20 @@ public class KunaTelegramBot extends TelegramBotCore {
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
         User user = getTelegramUser(update);
-        if (message == null || message.getText() == null) {
+        try {
+            if (message == null || message.getText() == null) {
+                showStartMenu(user);
+                return;
+            }
+            String messageText = message.getText();
+            if (messageText.equals(UIText.TELEGRAM_START_COMMAND) || messageText.equals(UIText.MARKET_GO_BACK)) {
+                showStartMenu(user);
+            } else {
+                processUserState(user, messageText);
+            }
+        } catch (Exception e) {
             showStartMenu(user);
-            return;
-        }
-        String messageText = message.getText();
-        if (messageText.equals(UIText.TELEGRAM_START_COMMAND) || messageText.equals(UIText.MARKET_GO_BACK)) {
-            showStartMenu(user);
-        } else {
-            processUserState(user, messageText);
+            log.error("{}{}", e.getMessage(), e);
         }
     }
 
@@ -71,7 +78,7 @@ public class KunaTelegramBot extends TelegramBotCore {
                 sendMessageToUser(userId, uiText, createGoBackToMenuKeyboard());
                 userService.changeState(user, UserState.ADD_NEW_INDICATOR_SELECT_MARKET);
             } else if (text.equals(UIText.MENU_DELETE_INDICATOR)) {
-                String uiText = getAllUsersIndicatorsAsString(userId);
+                String uiText = getAllUsersIndicatorsAsString(true, userId);
                 sendMessageToUser(userId, uiText, createGoBackToMenuKeyboard());
                 if (uiText.contains(UIText.NO_AVAILABLE_INDICATORS)) {
                     showStartMenu(user);
@@ -79,7 +86,7 @@ public class KunaTelegramBot extends TelegramBotCore {
                     userService.changeState(user, UserState.SELECT_INDICATOR_TO_DELETE);
                 }
             } else if (text.equals(UIText.MENU_SHOW_MY_INDICATORS)) {
-                String uiText = getAllUsersIndicatorsAsString(userId);
+                String uiText = getAllUsersIndicatorsAsString(false, userId);
                 sendMessageToUser(userId, uiText, null);
                 showStartMenu(user);
             } else if (text.equals(UIText.MENU_SHOW_LAST_MARKET_RATE)) {
@@ -141,7 +148,9 @@ public class KunaTelegramBot extends TelegramBotCore {
                 Long id = Long.parseLong(text);
                 try {
                     MarketRate lastMarketRate = marketService.getLastMarketRate(id);
-                    OffsetDateTime dateTimeZoned = lastMarketRate.getTimestamp().atOffset(ZoneOffset.ofHours(zonedOffset));
+                    String dateTimeZoned = lastMarketRate.getTimestamp()
+                            .atOffset(ZoneOffset.ofHours(zonedOffset))
+                            .format(DATE_TIME_FORMATTER);
                     String uiText = String.format(UIText.LAST_MARKET_VALUE_FORMAT,
                             lastMarketRate.getId(),
                             lastMarketRate.getMarketName(),
@@ -231,7 +240,7 @@ public class KunaTelegramBot extends TelegramBotCore {
         return stringBuilder.toString();
     }
 
-    private String getAllUsersIndicatorsAsString(Long userId) {
+    private String getAllUsersIndicatorsAsString(boolean forDeletion, Long userId) {
         List<Indicator> allUserNotFiredIndicators = indicatorsService.findAllNotFiredByUserId(userId);
         StringBuilder stringBuilder = new StringBuilder();
         if (allUserNotFiredIndicators.isEmpty()) {
@@ -240,15 +249,21 @@ public class KunaTelegramBot extends TelegramBotCore {
             stringBuilder.append(UIText.TOTAL_INDICATOR_AMOUNT).append(allUserNotFiredIndicators.size()).append("\n\n");
         }
         for (Indicator indicator : allUserNotFiredIndicators) {
+            MarketRate marketRate = marketService.getLastMarketRate(indicator.getMarket().getId());
+            String dateTimeZoned = indicator.getTimestampAdded()
+                    .atOffset(ZoneOffset.ofHours(zonedOffset))
+                    .format(DATE_TIME_FORMATTER);
             stringBuilder.append(String.format(UIText.INDICATORS_FORMAT,
                     indicator.getId(),
                     indicator.getMarket().getName(),
                     indicator.getIndicatorType().getDescription(),
+                    dateTimeZoned,
                     indicator.getOriginValue(),
+                    marketRate.getBuy(),
                     indicator.getValue()
             ));
         }
-        if (!allUserNotFiredIndicators.isEmpty()) {
+        if (forDeletion && !allUserNotFiredIndicators.isEmpty()) {
             stringBuilder.append(UIText.SELECT_INDICATOR);
         }
         return stringBuilder.toString();

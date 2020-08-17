@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum IndicatorType {
     BY_VALUE_ABOVE(1, "Значение больше чем"),
-    BY_VALUE_BEHIND(2, "Значение меньше чем");
+    BY_VALUE_BELOW(2, "Значение меньше чем");
 
     IndicatorType(int id, String description) {
         this.id = id;

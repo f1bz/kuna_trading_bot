@@ -6,7 +6,8 @@ public class UIText {
     }
 
     public static final String TELEGRAM_START_COMMAND = "/start";
-    public static final String INDICATORS_FORMAT = "%d. %s%nТип: %s%nНачальное значение: %f%nКонечное значение: %f%n%n";
+    public static final String INDICATORS_FORMAT = "%d. %s%nТип: %s%nСоздан: %s%nНачальное значение: %f%nТекущее значение: %f%nЗначение для сигнала: %f%n%n";
+    public static final String INDICATOR_FIRED_FORMAT = "Индикатор сработал!%n%n%d. %s%nТип: %s%nНачальное значение: %f%nТекущее значение: %f%nЗначение для сигнала: %f%n%n";
 
     public static final String LAST_MARKET_VALUE_FORMAT = "Id: %d %nПара: %s%n%nЦена покупки: %f%nЦена продажи: %f%nМакс(24 ч.): %f%nМин (24 ч.): %f%nОбьём (24 ч.): %f%n%nОбновлено: %s";
     public static final String MARKETS_FORMAT = "%d. %s%n";

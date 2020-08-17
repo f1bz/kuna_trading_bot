@@ -1,6 +1,7 @@
 package com.tradingbot.kuna.service.telegram;
 
 import com.tradingbot.kuna.model.Indicator;
+import com.tradingbot.kuna.model.MarketRate;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +14,15 @@ public class TelegramIndicatorNotifier {
         this.telegramBot = telegramBot;
     }
 
-    public void notifyFiredIndicator(Indicator indicator) {
+    public void notifyFiredIndicator(MarketRate marketRate, Indicator indicator) {
         Long userId = indicator.getUser().getId();
-        telegramBot.sendMessageToUser(userId, "yoyo");
+        String messageText = String.format(UIText.INDICATOR_FIRED_FORMAT,
+                indicator.getId(),
+                indicator.getMarket().getName(),
+                indicator.getIndicatorType().getDescription(),
+                indicator.getOriginValue(),
+                marketRate.getBuy(),
+                indicator.getValue());
+        telegramBot.sendMessageToUser(userId, messageText);
     }
 }

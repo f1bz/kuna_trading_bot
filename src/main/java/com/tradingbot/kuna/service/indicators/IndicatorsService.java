@@ -40,14 +40,14 @@ public class IndicatorsService {
                 Market marketFromUpdatedRate = marketRate.getMarket();
                 if (marketFromUpdatedRate.getId().equals(indicatorMarket.getId())
                         && indicatorFireService.isReadyToFire(marketRate, indicator)) {
-                    fire(indicator);
+                    fire(marketRate,indicator);
                 }
             }
         }
     }
 
-    private void fire(Indicator indicator) {
-        telegramIndicatorNotifierService.notifyFiredIndicator(indicator);
+    private void fire(MarketRate marketRate, Indicator indicator) {
+        telegramIndicatorNotifierService.notifyFiredIndicator(marketRate,indicator);
         markAsFired(indicator);
     }
 
@@ -97,7 +97,7 @@ public class IndicatorsService {
             indicator.setOriginValue(originalValue);
             if (indicatorType.equals(IndicatorType.BY_VALUE_ABOVE) && originalValue.compareTo(value) >= 0) {
                 throw new IllegalArgumentException();
-            } else if (indicatorType.equals(IndicatorType.BY_VALUE_BEHIND) && originalValue.compareTo(value) <= 0) {
+            } else if (indicatorType.equals(IndicatorType.BY_VALUE_BELOW) && originalValue.compareTo(value) <= 0) {
                 throw new IllegalArgumentException();
             }
         } else {
