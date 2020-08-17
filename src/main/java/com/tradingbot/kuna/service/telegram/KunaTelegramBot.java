@@ -17,16 +17,17 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class KunaTelegramBot extends TelegramBotCore {
 
+    @Value("${time.zone.hours:3}")
+    private Integer zonedOffset;
     private final UserService userService;
     private final UserMenuChoiceStore userMenuChoiceStore;
     private final IndicatorsService indicatorsService;
@@ -81,6 +82,10 @@ public class KunaTelegramBot extends TelegramBotCore {
                 String uiText = getAllUsersIndicatorsAsString(userId);
                 sendMessageToUser(userId, uiText, null);
                 showStartMenu(user);
+            } else if (text.equals(UIText.MENU_SHOW_LAST_MARKET_RATE)) {
+                String uiText = UIText.SELECT_MARKET + "\n\n" + getAllAvailableMarketsAsString();
+                sendMessageToUser(userId, uiText, createGoBackToMenuKeyboard());
+                userService.changeState(user, UserState.SHOW_MARKET_RATE_SELECT_MARKET);
             } else {
                 showStartMenu(user);
             }
@@ -131,6 +136,28 @@ public class KunaTelegramBot extends TelegramBotCore {
                 }
             }
             showStartMenu(user);
+        } else if (userState.equals(UserState.SHOW_MARKET_RATE_SELECT_MARKET)) {
+            if (ValidationUtils.isDigit(text)) {
+                Long id = Long.parseLong(text);
+                try {
+                    MarketRate lastMarketRate = marketService.getLastMarketRate(id);
+                    OffsetDateTime dateTimeZoned = lastMarketRate.getTimestamp().atOffset(ZoneOffset.ofHours(zonedOffset));
+                    String uiText = String.format(UIText.LAST_MARKET_VALUE_FORMAT,
+                            lastMarketRate.getId(),
+                            lastMarketRate.getMarketName(),
+                            lastMarketRate.getBuy(),
+                            lastMarketRate.getSell(),
+                            lastMarketRate.getHigh(),
+                            lastMarketRate.getLow(),
+                            lastMarketRate.getVolume(),
+                            dateTimeZoned);
+                    sendMessageToUser(userId, uiText, null);
+                } catch (Exception e) {
+                    sendMessageToUser(userId, UIText.ERROR_BAD_VALUE_SELECTED, null);
+                }
+
+            }
+            showStartMenu(user);
         } else {
             showStartMenu(user);
         }
@@ -160,9 +187,12 @@ public class KunaTelegramBot extends TelegramBotCore {
         keyboardSecondRow.add(UIText.MENU_CREATE_NEW_INDICATOR);
         KeyboardRow keyboardThirdRow = new KeyboardRow();
         keyboardThirdRow.add(UIText.MENU_DELETE_INDICATOR);
+        KeyboardRow keyboardForthRow = new KeyboardRow();
+        keyboardForthRow.add(UIText.MENU_SHOW_LAST_MARKET_RATE);
         keyboard.add(keyboardFirstRow);
         keyboard.add(keyboardSecondRow);
         keyboard.add(keyboardThirdRow);
+        keyboard.add(keyboardForthRow);
         replyKeyboardMarkup.setKeyboard(keyboard);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
         return replyKeyboardMarkup;
@@ -192,9 +222,7 @@ public class KunaTelegramBot extends TelegramBotCore {
 
     private String getAllAvailableIndicatorTypesAsString() {
         List<IndicatorType> allIndicators = Arrays.stream(IndicatorType.values())
-                .sorted((i1, i2) -> {
-                    return i1.getId() - i2.getId();
-                }).collect(Collectors.toList());
+                .sorted(Comparator.comparingInt(IndicatorType::getId)).collect(Collectors.toList());
 
         StringBuilder stringBuilder = new StringBuilder();
         for (IndicatorType indicatorType : allIndicators) {
