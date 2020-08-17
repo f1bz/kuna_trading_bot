@@ -1,4 +1,4 @@
-package com.tradingbot.kuna.service;
+package com.tradingbot.kuna.service.rates;
 
 import com.tradingbot.kuna.model.Market;
 import com.tradingbot.kuna.model.MarketRate;
@@ -45,14 +45,13 @@ public class MarketRateScraper {
                 .atOffset(ZoneOffset.UTC)
                 .toInstant();
 
-        MarketRate marketRate = MarketRate.builder()
-                .sell(sell)
-                .buy(buy)
-                .timestamp(timestampUTC)
-                .high(high)
-                .low(low)
-                .volume(volume)
-                .build();
+        MarketRate marketRate = new MarketRate();
+        marketRate.setSell(sell);
+        marketRate.setBuy(buy);
+        marketRate.setTimestamp(timestampUTC);
+        marketRate.setHigh(high);
+        marketRate.setLow(low);
+        marketRate.setVolume(volume);
         return marketRate;
     }
 }

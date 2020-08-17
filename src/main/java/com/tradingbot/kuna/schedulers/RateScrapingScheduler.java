@@ -1,6 +1,6 @@
 package com.tradingbot.kuna.schedulers;
 
-import com.tradingbot.kuna.service.RateUpdaterService;
+import com.tradingbot.kuna.service.rates.RateUpdaterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

@@ -1,0 +1,9 @@
+package com.tradingbot.kuna.model;
+
+public enum UserState {
+    STARTED,
+    SELECT_INDICATOR_TO_DELETE,
+    ADD_NEW_INDICATOR_SELECT_MARKET,
+    ADD_NEW_INDICATOR_SELECT_INDICATOR_TYPE,
+    ADD_NEW_INDICATOR_SELECT_VALUE,
+}

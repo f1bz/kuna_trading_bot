@@ -1,4 +1,7 @@
-package com.tradingbot.kuna;
+package com.tradingbot.kuna.utils;
+
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 public class CommonUtils {
 
@@ -11,6 +14,11 @@ public class CommonUtils {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    public static Instant getNowTimeInUtc() {
+        return Instant.now()
+                .atOffset(ZoneOffset.UTC)
+                .toInstant();
     }
 }

@@ -9,7 +9,6 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "market_rates")
-@Builder
 @Data
 public class MarketRate {
 
@@ -40,4 +39,7 @@ public class MarketRate {
 
     @Column(name = "timestamp")
     private Instant timestamp;
+
+    public MarketRate() {
+    }
 }
